@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package mlservice;
+
+service MLService {
+  rpc GetAvailableModels (Empty) returns (ModelList);
+  rpc TrainModel (TrainRequest) returns (TrainResponse);
+  rpc Predict (PredictRequest) returns (PredictResponse);
+}
+
+message Empty {}
+
+message ModelList {
+  repeated string models = 1;
+}
+
+message TrainRequest {
+  string model_type = 1;
+  string dataset_path = 2;
+  string hyperparameters_json = 3;
+}
+
+message TrainResponse {
+  string model_id = 1;
+  string status = 2;
+}
+
+message PredictRequest {
+  string model_id = 1;
+  repeated float features = 2;
+}
+
+message PredictResponse {
+  float prediction = 1;
+}

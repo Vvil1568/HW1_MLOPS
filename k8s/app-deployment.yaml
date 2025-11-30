@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: NodePort
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+    - port: 50051
+      targetPort: 50051
+      name: grpc
+  selector:
+    app: backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: backend-app:latest
+        imagePullPolicy: Never
+        env:
+        - name: AWS_ENDPOINT_URL
+          value: "http://minio-service:9000"
+        - name: AWS_ACCESS_KEY_ID
+          value: "minioadmin"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: "minioadmin"
+        - name: CLEARML_API_HOST
+          value: "http://host.minikube.internal:8008"
+        - name: CLEARML_WEB_HOST
+          value: "http://host.minikube.internal:8080"
+        - name: CLEARML_FILES_HOST
+          value: "http://host.minikube.internal:8081"
+        - name: CLEARML_API_ACCESS_KEY
+          value: "SBWMPAPNY5VUXL7UNJYRU5FU4JON1U"
+        - name: CLEARML_API_SECRET_KEY
+          value: "AEK527wkpsYFnrDv7JFGwATN2qJTD49q9YL9whehNAWjl3S3vkzpw7sAo-kNk_683sY"

@@ -1,0 +1,106 @@
+version: "3.6"
+services:
+
+  apiserver:
+    container_name: clearml-apiserver
+    image: clearml/server:latest
+    restart: unless-stopped
+    command:
+    - apiserver
+    volumes:
+    - ./data/logs:/var/log/clearml
+    - ./data/config:/opt/clearml/config
+    - ./data/files:/mnt/fileserver
+    depends_on:
+      - redis
+      - mongo
+      - elasticsearch
+      - fileserver
+    environment:
+      CLEARML_ELASTIC_SERVICE_HOST: elasticsearch
+      CLEARML_ELASTIC_SERVICE_PORT: 9200
+      CLEARML_MONGODB_SERVICE_HOST: mongo
+      CLEARML_MONGODB_SERVICE_PORT: 27017
+      CLEARML_REDIS_SERVICE_HOST: redis
+      CLEARML_REDIS_SERVICE_PORT: 6379
+      CLEARML_SERVER_DEPLOYMENT_TYPE: linux
+      CLEARML__apiserver__pre_populate__enabled: "false"
+      CLEARML__services__async_urls_delete__enabled: "false"
+    ports:
+      - "8008:8008"
+    networks:
+      - backend
+
+  elasticsearch:
+    networks:
+      - backend
+    container_name: clearml-elastic
+    image: elasticsearch:8.17.0
+    restart: unless-stopped
+    environment:
+      bootstrap.memory_lock: "true"
+      cluster.name: clearml
+      discovery.type: "single-node"
+      xpack.security.enabled: "false"
+      # Ограничение памяти для Java
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - ./data/elastic:/usr/share/elasticsearch/data
+
+  fileserver:
+    networks:
+      - backend
+    command:
+    - fileserver
+    container_name: clearml-fileserver
+    image: clearml/server:latest
+    restart: unless-stopped
+    volumes:
+    - ./data/logs:/var/log/clearml
+    - ./data/files:/mnt/fileserver
+    - ./data/config:/opt/clearml/config
+    ports:
+    - "8081:8081"
+
+  mongo:
+    networks:
+      - backend
+    container_name: clearml-mongo
+    image: mongo:7.0.22
+    restart: unless-stopped
+    volumes:
+    - ./data/mongo/db:/data/db
+    - ./data/mongo/configdb:/data/configdb
+
+  redis:
+    networks:
+      - backend
+    container_name: clearml-redis
+    image: redis:7.4.1
+    restart: unless-stopped
+    volumes:
+    - ./data/redis:/data
+
+  webserver:
+    command:
+    - webserver
+    container_name: clearml-webserver
+    image: clearml/server:latest
+    restart: unless-stopped
+    depends_on:
+      - apiserver
+    ports:
+    - "8080:80"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge

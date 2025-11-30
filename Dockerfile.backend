@@ -1,0 +1,30 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y git gcc python3-dev && rm -rf /var/lib/apt/lists/*
+
+RUN git config --global user.email "vivasilevskiy_1@edu.hse.ru" && \
+    git config --global user.name "MLOps Bot"
+
+COPY pyproject.toml .
+
+RUN pip install --upgrade pip
+RUN pip install poetry
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-root --no-interaction --no-ansi
+
+COPY app /app/app
+COPY proto /app/proto
+COPY scripts /app/scripts
+
+WORKDIR /
+COPY clearml.conf /root/clearml.conf
+
+WORKDIR /app
+
+RUN python scripts/generate_proto.py
+
+ENV PYTHONPATH=/app
+
+CMD ["python", "app/main.py"]
