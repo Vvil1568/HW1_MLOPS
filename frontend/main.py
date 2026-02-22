@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import json
-import pandas as pd
 
 API_URL = "http://backend-service:8000/api/v1"
 

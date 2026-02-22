@@ -25,7 +25,8 @@ class RandomForestModel(BaseModel):
     def train(self, X, y, hyperparams: Dict[str, Any]):
         n_estimators = int(hyperparams.get("n_estimators", 100))
         max_depth = hyperparams.get("max_depth", None)
-        if max_depth: max_depth = int(max_depth)
+        if max_depth:
+            max_depth = int(max_depth)
 
         y_encoded = self.le.fit_transform(y)
 
