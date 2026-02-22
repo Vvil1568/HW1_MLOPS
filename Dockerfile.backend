@@ -7,11 +7,11 @@ RUN apt-get update && apt-get install -y git gcc python3-dev && rm -rf /var/lib/
 RUN git config --global user.email "vivasilevskiy_1@edu.hse.ru" && \
     git config --global user.name "MLOps Bot"
 
+RUN pip install --upgrade pip && pip install poetry
+RUN poetry config virtualenvs.create false
+
 COPY pyproject.toml poetry.lock .
 
-RUN pip install --upgrade pip
-RUN pip install poetry
-RUN poetry config virtualenvs.create false
 RUN poetry install --no-root --no-interaction --no-ansi
 
 COPY app /app/app
