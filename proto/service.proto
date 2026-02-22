@@ -3,15 +3,37 @@ syntax = "proto3";
 package mlservice;
 
 service MLService {
+  rpc HealthCheck (Empty) returns (HealthResponse);
   rpc GetAvailableModels (Empty) returns (ModelList);
+  rpc ListDatasets (Empty) returns (DatasetList);
+  rpc UploadDataset (UploadRequest) returns (UploadResponse);
   rpc TrainModel (TrainRequest) returns (TrainResponse);
   rpc Predict (PredictRequest) returns (PredictResponse);
+  rpc DeleteModel (DeleteRequest) returns (DeleteResponse);
 }
 
 message Empty {}
 
+message HealthResponse {
+  string status = 1;
+}
+
 message ModelList {
   repeated string models = 1;
+}
+
+message DatasetList {
+  repeated string datasets = 1;
+}
+
+message UploadRequest {
+  string filename = 1;
+  bytes content = 2;
+}
+
+message UploadResponse {
+  string filename = 1;
+  string status = 2;
 }
 
 message TrainRequest {
@@ -31,5 +53,13 @@ message PredictRequest {
 }
 
 message PredictResponse {
-  float prediction = 1;
+  repeated float predictions = 1;
+}
+
+message DeleteRequest {
+  string model_id = 1;
+}
+
+message DeleteResponse {
+  string status = 1;
 }

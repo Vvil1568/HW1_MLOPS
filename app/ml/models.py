@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
+from typing import Dict, Any
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelEncoder
-from typing import Dict, Any
-import numpy as np
 
+MODEL_REGISTRY = {}
 
 class BaseModel(ABC):
     @abstractmethod
@@ -53,8 +54,5 @@ class LogisticRegressionModel(BaseModel):
     def predict(self, X):
         return self.model.predict(X)
 
-
-MODEL_REGISTRY = {
-    "RandomForest": RandomForestModel,
-    "LogisticRegression": LogisticRegressionModel
-}
+MODEL_REGISTRY["RandomForest"] = RandomForestModel
+MODEL_REGISTRY["LogisticRegression"] = LogisticRegressionModel

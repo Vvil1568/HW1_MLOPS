@@ -1,22 +1,21 @@
+from threading import Thread
+
 import uvicorn
 from fastapi import FastAPI
-from app.api import rest, grpc_service
+
+from app.api.grpc_service import serve_grpc_server
+from app.api.rest import router
 from app.config import settings
 from app.logger import get_logger
-from threading import Thread
 
 logger = get_logger("main")
 
 app = FastAPI(title="MLOps HW1 API", description="REST + gRPC ML Service")
-app.include_router(rest.router, prefix="/api/v1")
-
-def run_grpc():
-    grpc_service.serve(settings.GRPC_PORT)
+app.include_router(router, prefix="/api/v1")
 
 @app.on_event("startup")
 async def startup_event():
-    # Run gRPC in a separate thread
-    t = Thread(target=run_grpc, daemon=True)
+    t = Thread(target=serve_grpc_server, args=(settings.GRPC_PORT,), daemon=True)
     t.start()
     logger.info("Background gRPC thread started")
 
