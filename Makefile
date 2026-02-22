@@ -1,4 +1,8 @@
-.PHONY: infra build deploy clean tunnel
+.PHONY: start-minikube infra build deploy clean tunnel
+
+# 0. Запуск minikube
+start-minikube:
+	minikube start --driver=docker --memory=4096 --cpus=4
 
 # 1. Запуск ClearML (на хосте)
 infra:
@@ -24,3 +28,4 @@ tunnel:
 clean:
 	kubectl delete -f k8s/ --ignore-not-found
 	docker compose down
+	minikube stop
