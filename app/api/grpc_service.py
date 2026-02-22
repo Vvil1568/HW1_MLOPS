@@ -4,7 +4,7 @@ from concurrent import futures
 from proto import service_pb2, service_pb2_grpc
 from app.ml.models import MODEL_REGISTRY
 from app.ml.trainer import MLTrainer
-from app.core.logger import get_logger
+from app.logger import get_logger
 import joblib
 from clearml import Task
 

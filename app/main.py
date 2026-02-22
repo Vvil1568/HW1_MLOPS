@@ -1,9 +1,8 @@
-import asyncio
 import uvicorn
 from fastapi import FastAPI
 from app.api import rest, grpc_service
-from app.core.config import settings
-from app.core.logger import get_logger
+from app.config import settings
+from app.logger import get_logger
 from threading import Thread
 
 logger = get_logger("main")

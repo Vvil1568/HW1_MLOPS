@@ -2,8 +2,8 @@ import pandas as pd
 import joblib
 from clearml import Task
 from app.ml.models import MODEL_REGISTRY
-from app.core.config import settings
-from app.core.logger import get_logger
+from app.config import settings
+from app.logger import get_logger
 import os
 
 logger = get_logger(__name__)

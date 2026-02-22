@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 from app.ml.models import MODEL_REGISTRY
 from app.services.dvc_manager import DVCManager
 from app.ml.trainer import MLTrainer
-from app.core.config import settings
+from app.config import settings
 import os
 import shutil
 import joblib

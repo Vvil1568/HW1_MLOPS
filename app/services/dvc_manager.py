@@ -1,7 +1,7 @@
 import os
 import subprocess
-from app.core.config import settings
-from app.core.logger import get_logger
+from app.config import settings
+from app.logger import get_logger
 
 logger = get_logger(__name__)
 
