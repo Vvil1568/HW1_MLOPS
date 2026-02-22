@@ -15,7 +15,9 @@ class MLServiceLogic:
 
     def train(self, model_type: str, dataset_path: str, hyperparams: dict) -> str:
         logger.info(f"Starting training: {model_type} on {dataset_path}")
-        clean_endpoint = settings.AWS_ENDPOINT_URL.replace("http://", "").replace("https://", "")
+        clean_endpoint = settings.AWS_ENDPOINT_URL.replace("http://", "").replace(
+            "https://", ""
+        )
         output_uri = f"s3://{clean_endpoint}/{settings.S3_BUCKET_NAME}/models"
 
         task = None
@@ -29,7 +31,7 @@ class MLServiceLogic:
                 task_name=f"Train_{model_type}",
                 task_type=Task.TaskTypes.training,
                 output_uri=output_uri,
-                reuse_last_task_id=False
+                reuse_last_task_id=False,
             )
             task.connect(hyperparams)
 
@@ -37,7 +39,11 @@ class MLServiceLogic:
             if not os.path.exists(full_path):
                 raise FileNotFoundError(f"Dataset {dataset_path} not found")
 
-            df = pd.read_csv(full_path) if dataset_path.endswith(".csv") else pd.read_json(full_path)
+            df = (
+                pd.read_csv(full_path)
+                if dataset_path.endswith(".csv")
+                else pd.read_json(full_path)
+            )
             X, y = df.iloc[:, :-1], df.iloc[:, -1]
 
             model_cls = MODEL_REGISTRY.get(model_type)
@@ -65,8 +71,28 @@ class MLServiceLogic:
         if not task:
             raise ValueError(f"Task/Model {model_id} not found in ClearML")
 
-        model_artifact = task.artifacts['model'].get_local_copy()
+        model_artifact = task.artifacts["model"].get_local_copy()
         loaded_model = joblib.load(model_artifact)
+        predictions = loaded_model.predict(features)
+        return predictions.tolist()
+
+    def predict_batch(self, model_id: str, csv_content: bytes) -> list:
+        task = Task.get_task(task_id=model_id)
+        if not task:
+            raise ValueError(f"Task/Model {model_id} not found in ClearML")
+
+        model_artifact = task.artifacts["model"].get_local_copy()
+        loaded_model = joblib.load(model_artifact)
+
+        try:
+            df = pd.read_csv(pd.compat.StringIO(csv_content.decode("utf-8")))
+        except Exception as e:
+            raise ValueError(f"Invalid CSV content: {str(e)}")
+
+        if df.empty:
+            raise ValueError("CSV file is empty")
+
+        features = df.values.tolist()
         predictions = loaded_model.predict(features)
         return predictions.tolist()
 

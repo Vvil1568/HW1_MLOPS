@@ -8,17 +8,25 @@ from app.services.dvc_manager import DVCManager
 
 router = APIRouter()
 
+
 class TrainPayload(BaseModel):
     model_type: str
     dataset_name: str
     hyperparameters: Dict[str, Any]
 
+
 class PredictPayload(BaseModel):
     model_id: str
     features: List[List[float]]
 
+
+class BatchPredictPayload(BaseModel):
+    model_id: str
+
+
 def get_ml_service() -> MLServiceLogic:
     return MLServiceLogic()
+
 
 def get_dvc_manager() -> DVCManager:
     return DVCManager()
@@ -28,9 +36,11 @@ def get_dvc_manager() -> DVCManager:
 def health_check():
     return {"status": "ok"}
 
+
 @router.get("/models/list")
 def list_model_classes(ml_service: MLServiceLogic = Depends(get_ml_service)):
     return {"models": ml_service.get_available_models()}
+
 
 @router.delete("/models/{model_id}")
 def delete_model(model_id: str, ml_service: MLServiceLogic = Depends(get_ml_service)):
@@ -42,12 +52,16 @@ def delete_model(model_id: str, ml_service: MLServiceLogic = Depends(get_ml_serv
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/datasets/list")
 def list_datasets(dvc: DVCManager = Depends(get_dvc_manager)):
     return {"datasets": dvc.list_files()}
 
+
 @router.post("/datasets/upload")
-async def upload_dataset(file: UploadFile = File(...), dvc: DVCManager = Depends(get_dvc_manager)):
+async def upload_dataset(
+    file: UploadFile = File(...), dvc: DVCManager = Depends(get_dvc_manager)
+):
     try:
         content = await file.read()
         dvc.add_and_push(file.filename, content)
@@ -55,10 +69,15 @@ async def upload_dataset(file: UploadFile = File(...), dvc: DVCManager = Depends
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
+
 @router.post("/train")
-def train_model(payload: TrainPayload, ml_service: MLServiceLogic = Depends(get_ml_service)):
+def train_model(
+    payload: TrainPayload, ml_service: MLServiceLogic = Depends(get_ml_service)
+):
     try:
-        task_id = ml_service.train(payload.model_type, payload.dataset_name, payload.hyperparameters)
+        task_id = ml_service.train(
+            payload.model_type, payload.dataset_name, payload.hyperparameters
+        )
         return {"task_id": task_id, "status": "training_completed"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -67,10 +86,27 @@ def train_model(payload: TrainPayload, ml_service: MLServiceLogic = Depends(get_
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/predict")
-def predict(payload: PredictPayload, ml_service: MLServiceLogic = Depends(get_ml_service)):
+def predict(
+    payload: PredictPayload, ml_service: MLServiceLogic = Depends(get_ml_service)
+):
     try:
         predictions = ml_service.predict(payload.model_id, payload.features)
+        return {"predictions": predictions}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/predict/batch")
+async def predict_batch(
+    file: UploadFile = File(...), ml_service: MLServiceLogic = Depends(get_ml_service)
+):
+    try:
+        content = await file.read()
+        predictions = ml_service.predict_batch("test_model_id", content)
         return {"predictions": predictions}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
